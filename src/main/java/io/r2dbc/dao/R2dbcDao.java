@@ -31,7 +31,7 @@ public class R2dbcDao {
    * @param connectionFactory the R2DBC {@link ConnectionFactory} to use for obtaining connections.
    * @throws IllegalArgumentException if connectionFactory is null.
    */
-  public R2dbcDao(ConnectionFactory connectionFactory) {
+  public R2dbcDao(final ConnectionFactory connectionFactory) {
     if (connectionFactory == null) throw new IllegalArgumentException("ConnectionFactory must not be null");
     this.connectionFactory = connectionFactory;
   }
@@ -49,7 +49,7 @@ public class R2dbcDao {
    * @param <T>    the type of element emitted by the returned Flux.
    * @return a Flux emitting the results of the action.
    */
-  public <T> Flux<T> withConnection(Function<Connection, ? extends Publisher<T>> action) {
+  public <T> Flux<T> withConnection(final Function<Connection, ? extends Publisher<T>> action) {
     return Flux.usingWhen(
         connectionFactory.create(),
         connection -> {
@@ -75,7 +75,7 @@ public class R2dbcDao {
    * @return a Flux emitting the results of the transactional action.
    * @see #inTransaction(IsolationLevel, Function)
    */
-  public <T> Flux<T> inTransaction(Function<Connection, ? extends Publisher<T>> action) {
+  public <T> Flux<T> inTransaction(final Function<Connection, ? extends Publisher<T>> action) {
     return inTransaction(null, action);
   }
 
@@ -90,8 +90,8 @@ public class R2dbcDao {
    * @param <T>            the type of element emitted by the returned Flux.
    * @return a Flux emitting the results of the transactional action.
    */
-  public <T> Flux<T> inTransaction(@Nullable IsolationLevel isolationLevel,
-                                   Function<Connection, ? extends Publisher<T>> action) {
+  public <T> Flux<T> inTransaction(@Nullable final IsolationLevel isolationLevel,
+                                   final Function<Connection, ? extends Publisher<T>> action) {
     return withConnection(conn -> {
       // 1. Setup Isolation (if requested)
       Mono<Void> setup = (isolationLevel != null)
@@ -125,7 +125,7 @@ public class R2dbcDao {
    * @param parameters optional indexed parameters to bind.
    * @return a Flux emitting the count of rows updated.
    */
-  public Flux<Long> execute(String sql, Object... parameters) {
+  public Flux<Long> execute(final String sql, final Object... parameters) {
     return withConnection(conn -> execute(conn, sql, parameters));
   }
 
@@ -139,7 +139,7 @@ public class R2dbcDao {
    * @param <T>        the return type.
    * @return a Flux emitting mapped entities.
    */
-  public <T> Flux<T> select(String sql, BiFunction<Row, RowMetadata, T> mapper, Object... parameters) {
+  public <T> Flux<T> select(final String sql, final BiFunction<Row, RowMetadata, T> mapper, Object... parameters) {
     return withConnection(conn -> select(conn, sql, mapper, parameters));
   }
 
@@ -151,7 +151,7 @@ public class R2dbcDao {
    * @param parameters a map of named parameters to bind.
    * @return a Flux emitting the count of rows updated.
    */
-  public Flux<Long> execute(String sql, Map<String, Object> parameters) {
+  public Flux<Long> execute(final String sql, final Map<String, Object> parameters) {
     return withConnection(conn -> execute(conn, sql, parameters));
   }
 
@@ -165,7 +165,7 @@ public class R2dbcDao {
    * @param <T>        the return type.
    * @return a Flux emitting mapped entities.
    */
-  public <T> Flux<T> select(String sql, BiFunction<Row, RowMetadata, T> mapper, Map<String, Object> parameters) {
+  public <T> Flux<T> select(final String sql, final BiFunction<Row, RowMetadata, T> mapper, Map<String, Object> parameters) {
     return withConnection(conn -> select(conn, sql, mapper, parameters));
   }
 
@@ -179,7 +179,7 @@ public class R2dbcDao {
    * @param <T>    the type of the item being batched.
    * @return a Flux emitting the rows updated for each statement in the batch.
    */
-  public <T> Flux<Long> batch(String sql, Iterable<T> items, BiConsumer<Statement, T> binder) {
+  public <T> Flux<Long> batch(final String sql, final Iterable<T> items, BiConsumer<Statement, T> binder) {
     return withConnection(conn -> batch(conn, sql, items, binder));
   }
 
@@ -195,10 +195,10 @@ public class R2dbcDao {
    * @param <R>              the result type.
    * @return a Flux emitting the mapped results.
    */
-  public <T, R> Flux<R> batch(Function<Connection, Statement> statementFactory,
-                              Iterable<T> items,
-                              BiConsumer<Statement, T> binder,
-                              BiFunction<Row, RowMetadata, R> mapper) {
+  public <T, R> Flux<R> batch(final Function<Connection, Statement> statementFactory,
+                              final Iterable<T> items,
+                              final BiConsumer<Statement, T> binder,
+                              final BiFunction<Row, RowMetadata, R> mapper) {
     return withConnection(conn -> batch(conn, statementFactory, items, binder, mapper));
   }
 
@@ -214,7 +214,7 @@ public class R2dbcDao {
    * @param parameters indexed parameters.
    * @return a Flux emitting rows updated.
    */
-  public Flux<Long> execute(Connection conn, String sql, Object... parameters) {
+  public Flux<Long> execute(final Connection conn, final String sql, final Object... parameters) {
     if (log.isDebugEnabled()) {
       log.debug("Execute SQL: {}", sql);
     }
@@ -233,7 +233,7 @@ public class R2dbcDao {
    * @param <T>        the return type.
    * @return a Flux of mapped results.
    */
-  public <T> Flux<T> select(Connection conn, String sql, BiFunction<Row, RowMetadata, T> mapper, Object... parameters) {
+  public <T> Flux<T> select(final Connection conn, final String sql, final BiFunction<Row, RowMetadata, T> mapper, Object... parameters) {
     if (log.isDebugEnabled()) {
       log.debug("Select SQL: {}", sql);
     }
@@ -250,7 +250,7 @@ public class R2dbcDao {
    * @param parameters named parameters.
    * @return a Flux emitting rows updated.
    */
-  public Flux<Long> execute(Connection conn, String sql, Map<String, Object> parameters) {
+  public Flux<Long> execute(final Connection conn, final String sql, final Map<String, Object> parameters) {
     if (log.isDebugEnabled()) {
       log.debug("Execute SQL: {}", sql);
     }
@@ -269,7 +269,7 @@ public class R2dbcDao {
    * @param <T>        the return type.
    * @return a Flux of mapped results.
    */
-  public <T> Flux<T> select(Connection conn, String sql, BiFunction<Row, RowMetadata, T> mapper, Map<String, Object> parameters) {
+  public <T> Flux<T> select(final Connection conn, final String sql, final BiFunction<Row, RowMetadata, T> mapper, Map<String, Object> parameters) {
     if (log.isDebugEnabled()) {
       log.debug("Select SQL: {}", sql);
     }
@@ -288,7 +288,7 @@ public class R2dbcDao {
    * @param <T>    item type.
    * @return a Flux of rows updated.
    */
-  public <T> Flux<Long> batch(Connection conn, String sql, Iterable<T> items, BiConsumer<Statement, T> binder) {
+  public <T> Flux<Long> batch(final Connection conn, final String sql, final Iterable<T> items, BiConsumer<Statement, T> binder) {
     if (log.isDebugEnabled()) {
       log.debug("Batch Execute SQL: {}", sql);
     }
@@ -308,11 +308,11 @@ public class R2dbcDao {
    * @param <R>              result type.
    * @return a Flux of mapped results.
    */
-  public <T, R> Flux<R> batch(Connection conn,
-                              Function<Connection, Statement> statementFactory,
-                              Iterable<T> items,
-                              BiConsumer<Statement, T> binder,
-                              BiFunction<Row, RowMetadata, R> mapper) {
+  public <T, R> Flux<R> batch(final Connection conn,
+                              final Function<Connection, Statement> statementFactory,
+                              final Iterable<T> items,
+                              final BiConsumer<Statement, T> binder,
+                              final BiFunction<Row, RowMetadata, R> mapper) {
     if (log.isDebugEnabled()) {
       log.debug("Batch Execute (Custom Factory)");
     }
@@ -324,10 +324,10 @@ public class R2dbcDao {
   // Internal Helpers
   // -------------------------------------------------------------------------
 
-  private <T> Statement prepareBatch(Connection conn,
-                                     Function<Connection, Statement> factory,
-                                     Iterable<T> items,
-                                     BiConsumer<Statement, T> binder) {
+  private <T> Statement prepareBatch(final Connection conn,
+                                     final Function<Connection, Statement> factory,
+                                     final Iterable<T> items,
+                                     final BiConsumer<Statement, T> binder) {
     Statement statement = factory.apply(conn);
     Iterator<T> iterator = items.iterator();
     boolean first = true;
@@ -348,7 +348,7 @@ public class R2dbcDao {
     return statement;
   }
 
-  private void bindParameters(Statement statement, @Nullable Object[] parameters) {
+  private void bindParameters(final Statement statement, @Nullable final Object[] parameters) {
     if (parameters == null || parameters.length == 0) return;
 
     if (log.isTraceEnabled()) {
