@@ -9,6 +9,7 @@
 
     <name>R2DBC Data Access Object (DAO)</name>
     <description>A minimalist, reactive DAO wrapper for R2DBC SPI</description>
+    <url>https://www.r2dbc-dao.org</url>
 
     <licenses>
         <license>
