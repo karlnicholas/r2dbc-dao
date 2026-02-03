@@ -3,6 +3,7 @@ package io.r2dbc.dao;
 import io.r2dbc.h2.H2ConnectionFactoryProvider;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.IsolationLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -15,6 +16,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -43,8 +45,6 @@ class R2dbcDaoTest {
       stmt.execute("CREATE TABLE test ( id IDENTITY PRIMARY KEY, val INTEGER, name VARCHAR(50) )");
     }
   }
-
-  // ... (Keep existing tests: executeInsert_IndexBinding, select_NullHandling, etc.) ...
 
   @Test
   void executeInsert_IndexBinding() {
@@ -79,6 +79,18 @@ class R2dbcDaoTest {
   }
 
   @Test
+  void select_NamedBinding() {
+    dao.execute("INSERT INTO test (val, name) VALUES (400, 'baz')").blockLast();
+
+    dao.select("SELECT name FROM test WHERE val = $1",
+            (row, meta) -> row.get("name", String.class),
+            Map.of("$1", 400))
+        .as(StepVerifier::create)
+        .expectNext("baz")
+        .verifyComplete();
+  }
+
+  @Test
   void batchExecution() {
     dao.batch("INSERT INTO test (val) VALUES ($1)",
             Arrays.asList(100, 200),
@@ -89,8 +101,86 @@ class R2dbcDaoTest {
         .verifyComplete();
   }
 
+  @Test
+  void batch_ReturnGeneratedValues() {
+    dao.batch(
+            c -> c.createStatement("INSERT INTO test (val) VALUES ($1)").returnGeneratedValues("id"),
+            List.of(500, 600),
+            (stmt, val) -> stmt.bind("$1", val),
+            (row, meta) -> row.get("id", Long.class)
+        )
+        .as(StepVerifier::create)
+        .expectNextCount(2)
+        .verifyComplete();
+  }
+
+  @Test
+  void select_ExistingConnection() {
+    dao.withConnection(conn ->
+        dao.execute(conn, "INSERT INTO test (val, name) VALUES (700, 'existing')")
+            .thenMany(dao.select(conn, "SELECT name FROM test WHERE val = $1",
+                (row, meta) -> row.get("name", String.class),
+                700))
+    )
+    .as(StepVerifier::create)
+    .expectNext("existing")
+    .verifyComplete();
+  }
+
+  @Test
+  void batch_ExistingConnection() {
+    dao.withConnection(conn ->
+        dao.batch(conn, "INSERT INTO test (val) VALUES ($1)",
+            List.of(800, 900),
+            (stmt, val) -> stmt.bind("$1", val))
+    )
+    .as(StepVerifier::create)
+    .expectNext(1L)
+    .expectNext(1L)
+    .verifyComplete();
+  }
+
+  @Test
+  void execute_ExistingConnection_NamedBinding() {
+    dao.withConnection(conn ->
+        dao.execute(conn, "INSERT INTO test (val, name) VALUES ($1, $2)", Map.of("$1", 1100, "$2", "named_exec"))
+    )
+    .as(StepVerifier::create)
+    .expectNext(1L)
+    .verifyComplete();
+  }
+
+  @Test
+  void select_ExistingConnection_NamedBinding() {
+    dao.execute("INSERT INTO test (val, name) VALUES (1200, 'named_select')").blockLast();
+
+    dao.withConnection(conn ->
+        dao.select(conn, "SELECT name FROM test WHERE val = $1",
+            (row, meta) -> row.get("name", String.class),
+            Map.of("$1", 1200))
+    )
+    .as(StepVerifier::create)
+    .expectNext("named_select")
+    .verifyComplete();
+  }
+
+  @Test
+  void batch_ExistingConnection_ReturnGeneratedValues() {
+    dao.withConnection(conn ->
+        dao.batch(conn,
+            c -> c.createStatement("INSERT INTO test (val) VALUES ($1)").returnGeneratedValues("id"),
+            List.of(1300, 1400),
+            (stmt, val) -> stmt.bind("$1", val),
+            (row, meta) -> row.get("id", Long.class)
+        )
+    )
+    .as(StepVerifier::create)
+    .expectNextCount(2)
+    .verifyComplete();
+  }
+
   // -----------------------------------------------------------------------
-  // NEW: Transaction Tests
+  // Transaction Tests
   // -----------------------------------------------------------------------
 
   @Test
@@ -130,6 +220,21 @@ class R2dbcDaoTest {
     dao.select("SELECT count(*) FROM test", (row, meta) -> row.get(0, Long.class))
         .as(StepVerifier::create)
         .expectNext(0L)
+        .verifyComplete();
+  }
+
+  @Test
+  void transaction_IsolationLevel() {
+    dao.inTransaction(IsolationLevel.READ_COMMITTED, conn ->
+            dao.execute(conn, "INSERT INTO test (val) VALUES (1000)")
+        )
+        .as(StepVerifier::create)
+        .expectNext(1L)
+        .verifyComplete();
+
+    dao.select("SELECT val FROM test WHERE val = 1000", (row, meta) -> row.get("val", Integer.class))
+        .as(StepVerifier::create)
+        .expectNext(1000)
         .verifyComplete();
   }
 }
