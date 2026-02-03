@@ -4,6 +4,19 @@ This project is an exploration of what a Java API for relational database access
 [pr]: https://projectreactor.io
 [rs]: https://www.reactive-streams.org
 
+## Maven
+Milestone artifacts (library, source, and javadoc) can be found in Maven repositories.
+
+```xml
+<dependency>
+  <groupId>io.r2dbc</groupId>
+  <artifactId>r2dbc-dao</artifactId>
+  <version>1.0.0-RELEASE</version>
+</dependency>
+```
+
+Visit [https://www.r2dbc-dao.org](https://www.r2dbc-dao.org) for updates and resources.
+
 ## Examples
 A quick example of configuration and execution would look like:
 
@@ -122,18 +135,6 @@ public final class SomeEntityDao {
   }
 }
 ```
-
-## Maven
-Milestone artifacts (library, source, and javadoc) can be found in Maven repositories.
-
-```xml
-<dependency>
-  <groupId>io.r2dbc</groupId>
-  <artifactId>r2dbc-dao</artifactId>
-  <version>1.0.0-RELEASE</version>
-</dependency>
-```
-
 
 ## License
 This project is released under version 2.0 of the [Apache License][l].
