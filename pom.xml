@@ -4,7 +4,7 @@
 
     <groupId>org.r2dbc-dao</groupId>
     <artifactId>r2dbc-dao</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>R2DBC Data Access Object (DAO)</name>
@@ -31,7 +31,7 @@
         <connection>scm:git:git://github.com/karlnicholas/r2dbc-dao.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/karlnicholas/r2dbc-dao.git</developerConnection>
         <url>https://github.com/karlnicholas/r2dbc-dao</url>
-        <tag>r2dbc-dao-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
