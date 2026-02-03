@@ -9,9 +9,9 @@ Milestone artifacts (library, source, and javadoc) can be found in Maven reposit
 
 ```xml
 <dependency>
-  <groupId>io.r2dbc</groupId>
+  <groupId>io.r2dbc.client</groupId>
   <artifactId>r2dbc-dao</artifactId>
-  <version>1.0.0-RELEASE</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 
